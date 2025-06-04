@@ -1,0 +1,96 @@
+@OnLoad
+ShowLayout 0
+
+call @OnXYChange
+
+
+for i = 0 to 15
+  LabelKnob i, {label} 
+endif 
+
+// channel knob
+ChannelKnob = 0
+v= round TranslateScale (GetKnobValue ChannelKnob), 0, 127, 1, 16
+LabelKnob ChannelKnob, {Ch } , v
+
+// Program Change Knob
+programChangeKnob = 1
+LabelKnob programChangeKnob, {PC}
+SetKnobValue programChangeKnob, 0
+
+// note knob
+noteKnob = 2
+
+labelKnob noteKnob , {Note}k
+SetKnobValue noteKnob, 0
+
+//LabelPad pcPad, {PC } , GetKnobValue noteKnob
+
+
+// pads
+pcPad =0
+LabelPad pcPad, {PC } , GetKnobValue programChangeknob 
+
+CcPad = 1
+x= round GetXValue 
+y= round GetYValue 
+LabelPad CcPad,  {CC } , x , {   } , y
+
+  
+@End
+
+@OnXYChange
+  x = Round GetXValue 
+  y = Round GetYValue 
+  LabelXY {CC } , x , {   } , y
+  LabelPad 1,  {CC } , x , { } , y
+@End 
+
+@OnKnobChange
+
+if LastKnob = ChannelKnob
+v= round TranslateScale (GetKnobValue ChannelKnob), 0, 127, 1, 16
+LabelKnob ChannelKnob, {Ch } , v
+endif 
+
+If LastKnob = programChangeknob
+  LabelPad 1, {PC } , round GetKnobValue programChangeknob 
+endif 
+
+If LastKnob = noteKnob
+  note = round GetKnobValue noteKnob
+  LabelPad noteKnob, {Note } ,  note
+  LabelKnob noteKnob, {Note } , note
+endif
+
+@End 
+
+
+@OnPadDown
+
+chan = round TranslateScale (GetKnobValue ChannelKnob), 0, 127, 0, 15
+
+
+if LastPad = pcPad
+  pc = round getKnobValue programChangeKnob
+  SendMIDIProgramChange chan, pc , 0
+endif 
+
+if LastPad = 1
+  cc = round GetXValue 
+  value = round GetYValue 
+  log { sendMIDICC }, chan , { } , cc , { } , value
+  SendMIDICC chan, cc, value, 0
+ endif 
+ 
+if LastPad = 2
+  note = round getKnobValue 2
+  velocity = 1
+  delay =0
+  log { sendMIDINoteOn }, chan + 1, { } , note , { } , velocity
+  SendMIDINoteOn chan , note, velocity, delay
+endif 
+
+
+
+@End 
